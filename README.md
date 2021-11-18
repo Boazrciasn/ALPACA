@@ -30,4 +30,4 @@ Common shapenet objects renedered without texture from multiple viewpoints and d
 
 ### Results
 
-![](https://github.com/Boazrciasn/PAFA-Capsules/blob/3ea0f8bf61919655313162d4b49436ca2c2af798/images/results.jpg)
+![](https://github.com/Boazrciasn/PAFA-Capsules/blob/master/images/results.jpg)
