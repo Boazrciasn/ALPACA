@@ -188,8 +188,13 @@ def reduce_instances(cat_map, dataset_file, num_instances):
 
 if __name__ == '__main__':
     file = ""
-    train, test = create_datasets(file, "random_onethird")
-    train_set = data.DataLoader(train, batch_size=4, shuffle=True)
 
-    for t in train_set:
-        print(t[0].size(), t[1], t[2])
+    for k in split_criterion_dict:
+        train, test = create_datasets(file, k)
+        print("\n\n##############DATASET INFORMATION#####################\n")
+        print("dataset: {}".format(k))
+        print("train: {}\ttest: {}".format(len(train), len(test)))
+    #train_set = data.DataLoader(train, batch_size=4, shuffle=True)
+
+    #for t in train_set:
+    #    print(t[0].size(), t[1], t[2])

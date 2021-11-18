@@ -22,7 +22,7 @@ parser.add_argument("--split", help="train-test split, current options are: \naz
                                     "elevation_stepover,\n"
                                     "distance_stepover,\n", type=str, default="distance_stepover")
 parser.add_argument("--cpu", help="run on cpu? Note that it is faster at the moment", type=bool, default=False)
-parser.add_argument("-m", "--model", help="Which model to run?", type=str, default="ICPRQCN")
+parser.add_argument("-m", "--model", help="Which model to run?", type=str, default="VBCAPS")
 parser.add_argument( "--dsize", help="input size", type=int, default=32)
 """
 model list: 
@@ -37,6 +37,15 @@ model list:
             MatrixCaps
             NovelModelV2_Alt
             NovelModelV2_C
+            VGGNet
+            SqueezeNet
+            DenseNet
+            ResNet
+            MobileNet
+            EfficientNet
+            SRCAPS
+            IDARCAPS
+            VBCAPS
 """
 
 

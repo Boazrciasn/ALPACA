@@ -8,7 +8,7 @@ def namegen(c_name, sample):
     return "{}_{}_{}.png".format(c_name, sample['azimuth'], sample['elevation'])
 
 
-dataset_dir = "/Users/barisozcan/Databases/myDataset/"
+dataset_dir = ""
 
 with open(os.path.join(dataset_dir, "dataset.json")) as dfile:
     dataset = json.load(dfile)

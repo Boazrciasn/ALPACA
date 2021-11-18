@@ -166,7 +166,58 @@ class EngineCap(EngineBasic):
 
     def test_step(self, x, y):
         with torch.no_grad():
-            y_hat_pose_mean, y_hat, y_hat_pose_sigma = self.model(x)
+
+            y_hat_pose_mean, y_hat, y_hat_pose_sigma = self.model(x.to(device))
+            return (torch.max(y_hat, dim=1)[1] == y.to(device)).sum().item()
+
+
+class EngineSRCap(EngineBasic):
+    def __init__(self, model, opt):
+        super(EngineSRCap, self).__init__(model, opt)
+        self.loss_fn = nn.NLLLoss().to(device)
+
+    def train_step(self, x, y):
+        self.train_it += 1
+        self.optimizer.zero_grad()
+        x = x.to(device)
+        y = y.to(device)
+        y_hat= self.model(x)
+        loss = self.loss_fn(y_hat, y)
+        loss.backward()
+        self.optimizer.step()
+        self.scheduler.step()
+
+        return loss
+
+    def test_step(self, x, y):
+        with torch.no_grad():
+
+            y_hat = self.model(x.to(device))
+            return (torch.max(y_hat, dim=1)[1] == y.to(device)).sum().item()
+
+
+class EngineIDARCap(EngineBasic):
+    def __init__(self, model, opt):
+        super(EngineIDARCap, self).__init__(model, opt)
+        self.loss_fn = nn.CrossEntropyLoss().to(device)
+
+    def train_step(self, x, y):
+        self.train_it += 1
+        self.optimizer.zero_grad()
+        x = x.to(device)
+        y = y.to(device)
+        y_hat= self.model(x)
+        loss = self.loss_fn(y_hat, y)
+        loss.backward()
+        self.optimizer.step()
+        self.scheduler.step()
+
+        return loss
+
+    def test_step(self, x, y):
+        with torch.no_grad():
+
+            y_hat = self.model(x.to(device))
             return (torch.max(y_hat, dim=1)[1] == y.to(device)).sum().item()
 
 
@@ -273,7 +324,7 @@ class EngineNovel():
 
     def test_step(self, x, y):
         with torch.no_grad():
-            y_hat, y_pose, y_feat = self.model(x)
+            y_hat, y_pose, y_feat = self.model(x.to(device))
             return (torch.max(y_hat.squeeze(-1), dim=1)[1] == y.to(device)).sum().item()
 
     def train(self):
@@ -360,7 +411,7 @@ class EngineNovelContrastive(EngineNovel):
 
     def test_step(self, x, y):
         with torch.no_grad():
-            y_hat, y_pose, y_feat, _ = self.model(x)
+            y_hat, y_pose, y_feat, _ = self.model(x.to(device))
             return (torch.max(y_hat.squeeze(-1), dim=1)[1] == y.to(device)).sum().item()
 
     def train_step(self, x, y):
@@ -520,7 +571,7 @@ class EngineNovelNoFeat():
 
     def test_step(self, x, y):
         with torch.no_grad():
-            y_hat, y_pose = self.model(x)
+            y_hat, y_pose = self.model(x.to(device))
             return (torch.max(y_hat.squeeze(-1), dim=1)[1] == y.to(device)).sum().item()
 
     def train(self):

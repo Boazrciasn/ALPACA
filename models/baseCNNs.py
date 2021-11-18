@@ -109,7 +109,6 @@ class PytorchNet(nn.Module):
         return x
 
 
-
 class smallCNN(nn.Module):
     def __init__(self, num_classes):
         super(smallCNN, self).__init__()
@@ -133,6 +132,9 @@ class smallCNN(nn.Module):
         x = self.fc2(x)
 
         return x
+
+
+
 
 def create_basecnn(opt):
     return PytorchNet(opt.DATA.NUM_CLASS)
