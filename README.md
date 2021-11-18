@@ -16,7 +16,7 @@ In order to test custom models you can easily integrate your model with compatib
 Common shapenet objects renedered without texture from multiple viewpoints and distances. 
 
 ### Dataset splits
-![](https://github.com/Boazrciasn/PAFA-Capsules/blob/3ea0f8bf61919655313162d4b49436ca2c2af798/images/dataset%20visuals.jpg)
+![](https://github.com/Boazrciasn/PAFA-Capsules/blob/master/images/dataset_splits.jpg)
 
 ### NVPD samples
 ![](https://github.com/Boazrciasn/PAFA-Capsules/blob/3ea0f8bf61919655313162d4b49436ca2c2af798/images/_dAirplane.gif) ![](https://github.com/Boazrciasn/PAFA-Capsules/blob/3ea0f8bf61919655313162d4b49436ca2c2af798/images/_dCar.gif)
