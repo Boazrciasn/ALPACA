@@ -9,23 +9,36 @@ from engine.engine import *
 from models.feature_extractors import get_feature_extractor
 from models.heads import get_feat_head, get_pose_head, get_activation_head
 from utils.utils import count_parameters
+import re
 from torchvision import models
-
-def test():
-    print("hello test")
-    return 3
-
+from models.Reconstructors import *
 
 def update_opt(opt, args):
     opt.DATA.SAMPLING = args.split
+    opt.DATA.NAME = args.dataset_name
     opt.OUTPUT_DIR = args.outdir
     opt.TRAIN.RESUME = args.resume
     opt.TRAIN.BATCH_SIZE = args.batchsize
     opt.TRAIN.OPTIMIZER.LR = args.lr_rate
     opt.DATA.ROOT = args.dataset
+    opt.DATA.NAME = args.dataset_name
     opt.DATA.NUM_INSTANCES = args.num_instance
     opt.CPU = args.cpu
     opt.DATA.SIZE = args.dsize
+
+    if opt.DATA.NAME == "ilab2m":
+        opt.TRAIN.SCHEDULER.STEP_SIZE = 50000
+        opt.DATA.NUM_CLASS = 15
+        opt.DATA.CHANNELS = 3
+
+    elif re.match("SmallNORB_*", opt.DATA.NAME):
+        opt.DATA.NUM_CLASS = 5
+        opt.DATA.CHANNELS = 2
+
+    elif opt.DATA.NAME == "NVPD":
+        opt.DATA.NUM_CLASS = 10
+        opt.DATA.CHANNELS = 1
+
     return opt
 
 
@@ -34,7 +47,7 @@ def create_matcap(args):
     opt.OUTPUT_DIR = "./output_matcap"
     opt.MODEL.NAME = "MatrixCaps"
     opt = update_opt(opt, args)
-    model = MatCapNet(opt.DATA.SIZE, opt.DATA.NUM_CLASS)
+    model = MatCapNet(opt.DATA.SIZE, opt.DATA.NUM_CLASS, opt)
     opt.MODEL.NUM_PARAMS = count_parameters(model)
     engine = EngineCap(model, opt)
     return engine
@@ -45,7 +58,7 @@ def create_sr_caps(args):
     opt.OUTPUT_DUR = "./output_srcap"
     opt.MODEL.NAME = "SR-CAPS"
     opt = update_opt(opt, args)
-    model = SmallNet()
+    model = SmallNet(opt)
     opt.MODEL.NUM_PARAMS = count_parameters(model)
     engine = EngineSRCap(model, opt)
     return engine
@@ -56,11 +69,12 @@ def create_inv_dot_att_rout_caps(args):
     opt.OUTPUT_DUR = "./output_inv_dot_att_rout_cap"
     opt.MODEL.NAME = "ID-AR-CAPS"
     opt = update_opt(opt, args)
+
     model = CapsModel(opt.DATA.SIZE, {
         "backbone": {
             "kernel_size": 3,
             "output_dim": 128,
-            "input_dim": 1,
+            "input_dim": opt.DATA.CHANNELS,
             "stride": 2,
             "padding": 1,
             "out_img_size": 16
@@ -110,7 +124,7 @@ def create_vb_caps(args):
     opt.OUTPUT_DUR = "./output_vbcap"
     opt.MODEL.NAME = "VB-CAPS"
     opt = update_opt(opt, args)
-    model = VBCapsuleNet()
+    model = VBCapsuleNet(opt)
     opt.MODEL.NUM_PARAMS = count_parameters(model)
     engine = EngineSRCap(model, opt)
     return engine
@@ -120,7 +134,7 @@ def create_basecnn(args):
     opt = get_cfg_baseline_defaults()
     opt.OUTPUT_DIR = "./output_base_cnn"
     opt = update_opt(opt, args)
-    model = PytorchNet(opt.DATA.NUM_CLASS)
+    model = PytorchNet(opt.DATA.NUM_CLASS, opt.DATA.CHANNELS)
     opt.MODEL.NUM_PARAMS = count_parameters(model)
     opt.DATA.SIZE = args.dsize
     engine = EngineBasic(model, opt)
@@ -131,7 +145,7 @@ def create_small_cnn(args):
     opt = get_cfg_baseline_defaults()
     opt.OUTPUT_DIR = "./small_cnn"
     opt = update_opt(opt, args)
-    model = smallCNN(opt.DATA.NUM_CLASS)
+    model = smallCNN(opt.DATA.NUM_CLASS, opt.DATA.CHANNELS)
     opt.MODEL.NUM_PARAMS = count_parameters(model)
     engine = EngineBasic(model, opt)
     return engine
@@ -153,7 +167,7 @@ def create_icprqcn(args):
     opt.OUTPUT_DIR = "./output_QCN"
     opt.MODEL.NAME = "ICPRQCN_" + opt.TRAIN.LOSS_FN.NAME
     opt = update_opt(opt, args)
-    model = MatQuatCapNet()
+    model = MatQuatCapNet(opt)
     opt.MODEL.NUM_PARAMS = count_parameters(model)
     engine = EngineCap(model, opt)
     return engine
@@ -166,13 +180,14 @@ def create_novel_model_v2(args):
     opt.OUTPUT_DIR = "./output_v2"
     opt.MODEL.NAME = "NovelModelV2"
     opt = update_opt(opt, args)
-    f_ext = get_feature_extractor("deep1")
+    f_ext = get_feature_extractor("deep3", opt)
     a_head = get_activation_head("basic", 256, 32)
     p_head = get_pose_head("basic", 256, 32, 3)
     f_head = get_feat_head("basic", 256, 32, 32)
     model = Model_V2(opt, f_ext, p_head, a_head, f_head)
     opt.MODEL.NUM_PARAMS = count_parameters(model)
-    engine = EngineNovel(model, opt)
+    decoder = DeconvDecoder(opt)
+    engine = EngineNovel(model, decoder, opt)
     return engine
 
 
@@ -200,7 +215,11 @@ def create_novel_model_v2_C(args):
     opt.OUTPUT_DIR = "./output_v2_C"
     opt.MODEL.NAME = "NovelModelV2_C"
     opt = update_opt(opt, args)
-    f_ext = get_feature_extractor("basic")
+    if opt.DATA.NAME == "ilab2v":
+        f_ext = get_feature_extractor("deep3")
+    else:
+        f_ext = get_feature_extractor("deep1")
+
     a_head = get_activation_head("basic", 256, 32)
     p_head = get_pose_head("basic", 256, 32, 3)
     f_head = get_feat_head("basic", 256, 32, 32)
@@ -245,13 +264,16 @@ def create_novel_model_v2_alt(args):
     opt.OUTPUT_DIR = "./output_v2_alt"
     opt.MODEL.NAME = "NovelModelV2_Alt_" + opt.TRAIN.LOSS_FN.NAME
     opt = update_opt(opt, args)
-    f_ext = get_feature_extractor("deep1")
     a_head = get_activation_head("basic", 256, 32)
     p_head = get_pose_head("basic", 256, 32, 3)
     f_head = get_feat_head("basic", 256, 32, opt.MODEL.FEAT_SIZE)
+    opt.MODEL.NAME = "{}_{}_{}".format(args.model, args.dataset_name, opt.TRAIN.LOSS_FN.NAME)
+    f_ext = get_feature_extractor("deep3", opt)
     model = Model_V2_alt(opt, f_ext, p_head, a_head, f_head)
     opt.MODEL.NUM_PARAMS = count_parameters(model)
-    engine = EngineNovel(model, opt)
+    decoder = DeconvDecoder(opt)
+    engine = EngineNovel(model, decoder, opt)
+
     return engine
 
 
@@ -284,10 +306,10 @@ class MyVGG(nn.Module):
 
 
 class MySqueeze(nn.Module):
-    def __init__(self):
+    def __init__(self, opt):
         super(MySqueeze, self).__init__()
-        self.vgg = models.squeezenet1_0(num_classes=10)
-        self.conv = nn.Conv2d(kernel_size=(3, 3), padding=1, out_channels=3, in_channels=1)
+        self.vgg = models.squeezenet1_0(num_classes=opt.DATA.NUM_CLASS)
+        self.conv = nn.Conv2d(kernel_size=(3, 3), padding=1, out_channels=3, in_channels=opt.DATA.CHANNELS)
 
     def forward(self, input):
         x = self.conv(input)
@@ -295,10 +317,10 @@ class MySqueeze(nn.Module):
 
 
 class MyEfficient(nn.Module):
-    def __init__(self):
+    def __init__(self,opt):
         super(MyEfficient, self).__init__()
-        self.vgg = models.efficientnet_b0(num_classes=10)
-        self.conv = nn.Conv2d(kernel_size=(3, 3), padding=1, out_channels=3, in_channels=1)
+        self.vgg = models.efficientnet_b0(num_classes=opt.DATA.NUM_CLASS)
+        self.conv = nn.Conv2d(kernel_size=(3, 3), padding=1, out_channels=3, in_channels=opt.DATA.CHANNELS)
 
     def forward(self, input):
         x = self.conv(input)
@@ -306,10 +328,10 @@ class MyEfficient(nn.Module):
 
 
 class MyDense(nn.Module):
-    def __init__(self):
+    def __init__(self,opt):
         super(MyDense, self).__init__()
-        self.vgg = models.densenet121(num_classes=10)
-        self.conv = nn.Conv2d(kernel_size=(3, 3), padding=1, out_channels=3, in_channels=1)
+        self.vgg = models.densenet121(num_classes=opt.DATA.NUM_CLASS)
+        self.conv = nn.Conv2d(kernel_size=(3, 3), padding=1, out_channels=3, in_channels=opt.DATA.CHANNELS)
 
     def forward(self, input):
         x = self.conv(input)
@@ -317,10 +339,10 @@ class MyDense(nn.Module):
 
 
 class MyResnet(nn.Module):
-    def __init__(self):
+    def __init__(self, opt):
         super(MyResnet, self).__init__()
-        self.vgg = models.resnet50(num_classes=10)
-        self.conv = nn.Conv2d(kernel_size=(3, 3), padding=1, out_channels=3, in_channels=1)
+        self.vgg = models.resnet50(num_classes=opt.DATA.NUM_CLASS)
+        self.conv = nn.Conv2d(kernel_size=(3, 3), padding=1, out_channels=3, in_channels=opt.DATA.CHANNELS)
 
     def forward(self, input):
         x = self.conv(input)
@@ -330,8 +352,8 @@ class MyResnet(nn.Module):
 class MyMobile(nn.Module):
     def __init__(self):
         super(MyMobile, self).__init__()
-        self.vgg = models.mobilenet_v2(num_classes=10)
-        self.conv = nn.Conv2d(kernel_size=(3, 3), padding=1, out_channels=3, in_channels=1)
+        self.vgg = models.mobilenet_v2(num_classes=opt.DATA.NUM_CLASS)
+        self.conv = nn.Conv2d(kernel_size=(3, 3), padding=1, out_channels=3, in_channels=opt.DATA.CHANNELS)
 
     def forward(self, input):
         x = self.conv(input)
@@ -339,10 +361,10 @@ class MyMobile(nn.Module):
 
 
 class MyEff(nn.Module):
-    def __init__(self):
+    def __init__(self,opt):
         super(MyEff, self).__init__()
-        self.vgg = models.efficientnet_b0(num_classes=10)
-        self.conv = nn.Conv2d(kernel_size=(3, 3), padding=1, out_channels=3, in_channels=1)
+        self.vgg = models.efficientnet_b0(num_classes=opt.DATA.NUM_CLASS)
+        self.conv = nn.Conv2d(kernel_size=(3, 3), padding=1, out_channels=3, in_channels=opt.DATA.CHANNELS)
 
     def forward(self, input):
         x = self.conv(input)
@@ -366,7 +388,7 @@ def create_squeezenet_model(args):
     opt.OUTPUT_DIR = "./output_base_cnn"
     opt.MODEL.NAME = "SqueezeNet"
     opt = update_opt(opt, args)
-    model = MySqueeze()
+    model = MySqueeze(opt)
     opt.MODEL.NUM_PARAMS = count_parameters(model)
     opt.DATA.SIZE = args.dsize
     engine = EngineBasic(model, opt)
@@ -378,7 +400,7 @@ def create_densenet_model(args):
     opt.OUTPUT_DIR = "./output_base_cnn"
     opt.MODEL.NAME = "DenseNet"
     opt = update_opt(opt, args)
-    model = MyDense()
+    model = MyDense(opt)
     opt.MODEL.NUM_PARAMS = count_parameters(model)
     opt.DATA.SIZE = args.dsize
     engine = EngineBasic(model, opt)
@@ -390,7 +412,7 @@ def create_resnet_model(args):
     opt.OUTPUT_DIR = "./output_base_cnn"
     opt.MODEL.NAME = "Resnet"
     opt = update_opt(opt, args)
-    model = MyResnet()
+    model = MyResnet(opt)
     opt.MODEL.NUM_PARAMS = count_parameters(model)
     opt.DATA.SIZE = args.dsize
     engine = EngineBasic(model, opt)
@@ -414,7 +436,7 @@ def create_efficientnet_model(args):
     opt.OUTPUT_DIR = "./output_base_cnn"
     opt.MODEL.NAME = "EffNet"
     opt = update_opt(opt, args)
-    model = MyEff()
+    model = MyEff(opt)
     opt.MODEL.NUM_PARAMS = count_parameters(model)
     opt.DATA.SIZE = args.dsize
     engine = EngineBasic(model, opt)
@@ -436,7 +458,7 @@ def get_model(args):
         "NovelModelV2_deep_SkipCon": lambda: (args),
         "NovelModelV2_NoFeat": lambda: create_novel_model_v2_nofeat(args),
         "MatrixCaps": lambda: create_matcap(args),
-        "NovelModelV2_Alt": lambda: create_novel_model_v2_alt(args),
+        "PAFA": lambda: create_novel_model_v2_alt(args),
         "NovelModelV2_64": lambda: create_novel_model_v2_64(args),
         "NovelModelV2_C": lambda: create_novel_model_v2_C(args),
         "VGGNet": lambda: create_vgg_model(args),

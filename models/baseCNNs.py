@@ -84,10 +84,10 @@ class AlexNet(nn.Module):
 
 
 class PytorchNet(nn.Module):
-    def __init__(self, num_classes):
+    def __init__(self, num_classes, in_channels):
         super(PytorchNet, self).__init__()
         self.pool = nn.MaxPool2d(2, 2)
-        self.conv1 = nn.Conv2d(1, 32, 11)
+        self.conv1 = nn.Conv2d(in_channels, 32, 11)
         self.conv2 = nn.Conv2d(32, 64, 11)
         self.conv3 = nn.Conv2d(64, 64, 5)
         self.dropout1 = nn.Dropout(0.25)
@@ -110,10 +110,10 @@ class PytorchNet(nn.Module):
 
 
 class smallCNN(nn.Module):
-    def __init__(self, num_classes):
+    def __init__(self, num_classes, in_channels):
         super(smallCNN, self).__init__()
         self.pool = nn.MaxPool2d(2, 2)
-        self.conv1 = nn.Conv2d(1, 16, 11)
+        self.conv1 = nn.Conv2d(in_channels, 16, 11)
         self.conv2 = nn.Conv2d(16, 32, 5)
         self.conv3 = nn.Conv2d(32, 64, 5)
         self.conv4 = nn.Conv2d(64, 64, 5)

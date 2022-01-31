@@ -2,7 +2,7 @@ import torch
 import numpy as np
 import torch.nn as nn
 import torch.nn.functional as F
-
+from utils.device_setting import device
 
 class PrimaryCapsules2d(nn.Module):
     '''Primary Capsule Layer'''
@@ -158,8 +158,8 @@ class ConvCapsules2d(nn.Module):
 
             # coordinates = torch.arange(self.F, dtype=torch.float32) / self.F
             coordinates = torch.arange(self.F, dtype=torch.float32).add(1.) / (self.F*10)
-            i_vals = torch.zeros(self.P*self.P,self.F,1).cuda()
-            j_vals = torch.zeros(self.P*self.P,1,self.F).cuda()
+            i_vals = torch.zeros(self.P*self.P,self.F,1).to(device)
+            j_vals = torch.zeros(self.P*self.P,1,self.F).to(device)
             i_vals[self.P-1,:,0] = coordinates
             j_vals[2*self.P-1,0,:] = coordinates
 
@@ -222,7 +222,7 @@ class VariationalBayesRouting2d(nn.Module):
         self.nu0 = nu0
 
         # log determinant = 0, if Psi0 is identity
-        self.register_buffer('lndet_Psi0', 2*torch.diagonal(torch.cholesky(
+        self.register_buffer('lndet_Psi0', 2*torch.diagonal(torch.linalg.cholesky(
             Psi0)).log().sum())
 
         # pre compute the argument of the digamma function in E[ln|lambda_j|]
@@ -254,7 +254,7 @@ class VariationalBayesRouting2d(nn.Module):
         self.N = self.B*self.F_i[0]*self.F_i[1] # total num of lower level capsules
 
         # Out ← [1, B, C, 1, 1, 1, 1, 1, 1]
-        R_ij = (1./self.C) * torch.ones(1,self.B,self.C,1,1,1,1,1,1, requires_grad=False).cuda()
+        R_ij = (1./self.C) * torch.ones(1,self.B,self.C,1,1,1,1,1,1, requires_grad=False).to(device)
 
         for i in range(self.iter): # routing iters
 
@@ -410,15 +410,15 @@ class VariationalBayesRouting2d(nn.Module):
 
 class VBCapsuleNet(nn.Module):
     ''' Example: Simple 3 layer CapsNet '''
-    def __init__(self):
+    def __init__(self, opt):
         super(VBCapsuleNet, self).__init__()
 
         arch = [64,16,16,16,10]
         self.P = 4
         self.PP = int(np.max([2, self.P*self.P]))
         self.A, self.B, self.C, self.D = arch[:-1]
-        self.n_classes = 10
-        self.in_channels = 1
+        self.n_classes = opt.DATA.NUM_CLASS
+        self.in_channels = opt.DATA.CHANNELS
 
         self.Conv_1 = nn.Conv2d(in_channels=self.in_channels, out_channels=self.A,
             kernel_size=5, stride=2, bias=False)

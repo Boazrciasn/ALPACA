@@ -318,14 +318,14 @@ class QCN(nn.Module):
         super(QCN, self).__init__()
         self.opt = opt
         if self.opt.MODEL.BRANCHED:
-            self.resblock1_pose = rb.BasicPreActResBlock(1, 32, 1)
+            self.resblock1_pose = rb.BasicPreActResBlock(opt.DATA.CHANNELS, 32, 1)
             self.resblock1_activation = rb.BasicPreActResBlock(1, 32, 2)
             self.resblock2_pose = rb.BasicPreActResBlock(32, 64, 2)
             self.primarycaps = PrimaryQuatCaps(in_channels_pose=64, in_channels_act=32, outCaps=32)
 
         else:
 
-            self.resblock1 = rb.BasicPreActResBlock(1, 64, 1)
+            self.resblock1 = rb.BasicPreActResBlock(opt.DATA.CHANNELS, 64, 1)
             self.resblock2 = rb.BasicPreActResBlock(64, 64 + 32, 2)
             self.primarycaps = PrimaryQuatCapsNobranch(in_channels=96, outCaps=32)
 
@@ -353,13 +353,13 @@ class QCN(nn.Module):
 
 class MatQuatCapNet(nn.Module):
 
-    def __init__(self):
+    def __init__(self, opt):
         super(MatQuatCapNet, self).__init__()
 
 
-        self.resblock1_pose = rb.BasicPreActResBlock(1, 32, 1)
+        self.resblock1_pose = rb.BasicPreActResBlock(opt.DATA.CHANNELS, 32, 1)
         self.resblock2_pose = rb.BasicPreActResBlock(32, 64, 2)
-        self.resblock1_activation = rb.BasicPreActResBlock(1, 32, 2)
+        self.resblock1_activation = rb.BasicPreActResBlock(opt.DATA.CHANNELS, 32, 2)
         self.primarycaps = PrimaryQuatCaps(in_channels_pose=64, in_channels_act=32, outCaps=32)
 
         self.convquatcapmat1 = ConvQuaternionCapsLayer_old(kernel_size=(5, 5), stride=(1, 1), inCaps=32, outCaps=16,
@@ -374,7 +374,7 @@ class MatQuatCapNet(nn.Module):
                                                        routing_iterations=2,
                                                        routing=EMRouting_old)
 
-        self.classquatcapmat = FCQuatCaps_old(inCaps=16, outCaps=10, quat_dims=4, routing_iterations=2, routing=EMRouting_old)
+        self.classquatcapmat = FCQuatCaps_old(inCaps=16, outCaps=opt.DATA.NUM_CLASS, quat_dims=4, routing_iterations=2, routing=EMRouting_old)
 
     def forward(self, x):
 

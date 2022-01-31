@@ -164,10 +164,10 @@ class ConvCapsMatrix(nn.Module):
 # Exactly same network with the paper:
 class MatCapNet(nn.Module):
 
-    def __init__(self, inputSize, num_class):
+    def __init__(self, inputSize, num_class, opt):
         super(MatCapNet, self).__init__()
 
-        self.conv1 = nn.Conv2d(in_channels=1, out_channels=32, kernel_size=5, stride=2)
+        self.conv1 = nn.Conv2d(in_channels=opt.DATA.CHANNELS, out_channels=32, kernel_size=5, stride=2)
         self.primarycaps = PrimaryMatCaps(in_channels=32, outCaps=32, M_size=(4, 4))
         self.convcapmat1 = ConvCapsMatrix(kernel_size=(3, 3), stride=(2, 2), inCaps=32, outCaps=32, M_size=(4, 4),
                                           routing_iterations=3, routing=EMRouting)

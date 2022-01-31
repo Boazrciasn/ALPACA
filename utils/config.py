@@ -31,11 +31,12 @@ def get_cfg_baseline_defaults():
     _C.DATA.INPUT = "gray"
     _C.DATA.SIZE = 128
     _C.DATA.NUM_WORKERS = 1
+    _C.DATA.CHANNELS = 1
 
     _C.TRAIN = CN()
     _C.TRAIN.START_STEP = 0
     _C.TRAIN.SHUFFLE = True
-    _C.TRAIN.MAX_IT = 5000000
+    _C.TRAIN.MAX_IT = 10000000
     _C.TRAIN.BATCH_SIZE = 4
     _C.TRAIN.OPTIMIZER = "adam"
     _C.TRAIN.RESUME = False
@@ -164,7 +165,7 @@ def get_cfg_qcn():
     _C.TRAIN.BATCH_SIZE = 4
     _C.TRAIN.OPTIMIZER = "adam"
     _C.TRAIN.RESUME = False
-    _C.TRAIN.LOG_INTERVAL = 200
+    _C.TRAIN.LOG_INTERVAL = 500
     _C.TRAIN.SAVE_INTERVAL = 50000
     _C.TRAIN.TEST_TEST_INTERVAL = 200000
     _C.TRAIN.TRAIN_TEST_INTERVAL = 10000
@@ -239,7 +240,7 @@ def get_cfg_model_v1():
 
     _C.TRAIN.SCHEDULER = CN()
     _C.TRAIN.SCHEDULER.NAME = "step_lr"  # step_lr, reduce_on_plat
-    _C.TRAIN.SCHEDULER.STEP_SIZE = 40000
+    _C.TRAIN.SCHEDULER.STEP_SIZE = 100000
     _C.TRAIN.SCHEDULER.GAMMA = .9
     _C.TRAIN.SCHEDULER.LAST_EPOCH = -1
 

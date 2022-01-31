@@ -111,9 +111,9 @@ class SelfRouting2d(nn.Module):
 
 
 class SmallNet(nn.Module):
-    def __init__(self):
+    def __init__(self, opt):
         super(SmallNet, self).__init__()
-        channels, classes = 1, 10
+        channels, classes = opt.DATA.CHANNELS, opt.DATA.NUM_CLASS
         self.conv1 = nn.Conv2d(channels, 256, kernel_size=7, stride=2, padding=1, bias=False)
         self.bn1 = nn.BatchNorm2d(256)
 

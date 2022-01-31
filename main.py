@@ -7,9 +7,10 @@ from models.model_creator import get_model
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument("-d", "--dataset", help="dataset root", type=str, default="")
-parser.add_argument("-b", "--batchsize", help="batchsize for (train, test)", type=int, default=32)
-parser.add_argument("-w", "--numworkers", help="number of workers for dataloader", type=int, default=8)
+parser.add_argument("-d", "--dataset", help="dataset root", type=str, default=" ")
+parser.add_argument("--dataset_name", help="dataset root", type=str, default="ilab2m") #ilab2m or NVPD
+parser.add_argument("-b", "--batchsize", help="batchsize for (train, test)", type=int, default=8)
+parser.add_argument("-w", "--numworkers", help="number of workers for dataloader", type=int, default=1)
 parser.add_argument("-e", "--epoch", help="training epochs", type=int, default=250)
 parser.add_argument("-r", "--resume", help="resume or from scratch", action="store_true")
 parser.add_argument("-o", "--outdir", help="training output directory", type=str, default="./output")
@@ -22,8 +23,8 @@ parser.add_argument("--split", help="train-test split, current options are: \naz
                                     "elevation_stepover,\n"
                                     "distance_stepover,\n", type=str, default="distance_stepover")
 parser.add_argument("--cpu", help="run on cpu? Note that it is faster at the moment", type=bool, default=False)
-parser.add_argument("-m", "--model", help="Which model to run?", type=str, default="VBCAPS")
-parser.add_argument( "--dsize", help="input size", type=int, default=32)
+parser.add_argument("-m", "--model", help="Which model to run?", type=str, default="") 
+parser.add_argument( "--dsize", help="input size", type=int, default=128)
 """
 model list: 
             BaseCNN
@@ -35,7 +36,7 @@ model list:
             NovelModelV2_deep_SkipCon
             NovelModelV2_NoFeat
             MatrixCaps
-            NovelModelV2_Alt
+            PAFA
             NovelModelV2_C
             VGGNet
             SqueezeNet
@@ -46,6 +47,7 @@ model list:
             SRCAPS
             IDARCAPS
             VBCAPS
+            ICPRQCN
 """
 
 
@@ -56,6 +58,7 @@ if __name__ == '__main__':
     print(args.cpu)
     print(torch.cuda.is_available() and not args.cpu)
     print("DEVICE:{}".format(ENGINE.device))
+
     engine = get_model(args)
     engine.train()
 

@@ -87,7 +87,7 @@ class Model_V2_C(Model_V2):
                                         feat_size=32, init_type=self.opt.MODEL.INIT_TYPE)
         self.fccaps2 = NovelCapsuleLayer_C(inCaps=48, outCaps=16, quat_dims=4,
                                          feat_size=32, init_type=self.opt.MODEL.INIT_TYPE)
-        self.classcaps = NovelCapsuleLayer_C(inCaps=64, outCaps=10, quat_dims=4,
+        self.classcaps = NovelCapsuleLayer_C(inCaps=64, outCaps=opt.DATA.NUM_CLASS, quat_dims=4,
                                            feat_size=32, init_type=self.opt.MODEL.INIT_TYPE)
 
     def forward(self, x):
@@ -171,7 +171,7 @@ class Model_V2_alt(nn.Module):
                                         feat_size=self.opt.MODEL.FEAT_SIZE, init_type=self.opt.MODEL.INIT_TYPE)
         self.fccaps2 = NovelCapsuleLayer_alt(inCaps=48, outCaps=16, quat_dims=4,
                                          feat_size=self.opt.MODEL.FEAT_SIZE, init_type=self.opt.MODEL.INIT_TYPE)
-        self.classcaps = NovelCapsuleLayer_alt(inCaps=64, outCaps=10, quat_dims=4,
+        self.classcaps = NovelCapsuleLayer_alt(inCaps=64, outCaps=opt.DATA.NUM_CLASS, quat_dims=4,
                                            feat_size=self.opt.MODEL.FEAT_SIZE, init_type=self.opt.MODEL.INIT_TYPE)
 
     def forward(self, x):
