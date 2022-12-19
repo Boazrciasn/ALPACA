@@ -62,13 +62,14 @@ class NovelCapsuleLayer(QuaternionLayer):
     def calculate_pose_votes(self, q):
         W_theta_sin = self.phi*torch.sin(self.W_theta) + eps
         W_theta_cos = self.phi*torch.cos(self.W_theta) + eps
-        W_unit = torch.div(self.W_hat, torch.norm(self.W_hat, dim=3, keepdim=True))
-        W_rotor = torch.cat((W_theta_cos, W_theta_sin * W_unit), dim=3)
+        W_rotor = torch.cat((W_theta_cos, W_theta_sin * self.W_hat), dim=3)
+        W_rotor = torch.div(W_rotor, torch.norm(W_rotor, dim=3, keepdim=True))
         W_ = torch.sum(self.quatEmbedder * W_rotor, dim=3)
         W_conj = self.left2right * W_.permute(0, 1, 2, 4, 3)
         votes_q = W_conj @ W_ @ q.unsqueeze(2).unsqueeze(-1)
         return votes_q.squeeze(-1)
-
+    
+    
     def calculate_feat_votes(self, f):
         votes_f = list()
         for f_single in f.split(1, dim=1):
