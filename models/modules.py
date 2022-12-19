@@ -48,7 +48,7 @@ class NovelCapsuleLayer(QuaternionLayer):
         nn.init.uniform_(self.W_hat, 0, 1)
         self.phi = nn.Parameter(torch.zeros(1, inCaps, outCaps, 1, 1, 1))
         self.sigma = 1/math.sqrt(2*(inCaps + outCaps))
-        nn.init.uniform_(self.phi, -self.sigma, -self.sigma)
+        nn.init.uniform_(self.phi, -self.sigma, self.sigma)
         self.router = PoseAttRouter()
         self.left2right = self.left2right.flatten(start_dim=1, end_dim=5)
         self.feat_layer = nn.Linear(feat_size, outCaps*feat_size)
